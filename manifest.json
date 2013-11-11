@@ -1,0 +1,34 @@
+ {
+  "manifest_version": 2,
+  "name": "HypeMachine Extension",
+  "version": "1.44",
+  "description": "Adds a star button to hypemachine to check if the song exists in spotify's library.",
+  "web_accessible_resources": ["hypestyles.css"],
+  "background": {
+    "page": "background.html"
+  },
+  "content_security_policy": "script-src 'self' https://ssl.google-analytics.com; object-src 'self'",
+  "homepage_url": "http://ecmode.com",
+  "icons": {
+    "48": "./images/hype48.jpeg",
+    "128": "./images/hype128.png"
+  },
+  "permissions": [
+    "tabs",
+    "debugger",
+    "http://hypem.com/",
+    "http://hypem.com/*/",
+    "http://www.hypem.com/",
+    "http://www.hypem.com/*/",
+    "http://*/", 
+    "https://*/"
+  ],
+  "content_scripts":[
+  {
+	"matches": ["http://hypem.com/*", "https://hypem.com/*"], 
+	"css": ["hypestyles.css"],
+	"js": ["extension.js"],
+	"run_at": "document_end"
+  }
+  ]
+}

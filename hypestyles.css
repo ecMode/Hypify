@@ -1,0 +1,65 @@
+.section .same-post .tools
+{
+	width:300px;
+}
+
+.section .tools
+{
+	width:300px;
+}
+
+li.dl
+{
+	float: right;
+}
+
+#content-left .section h3, #content-left #previous mentions .section h3
+{
+	padding-right:150px;
+}
+
+.spacer {
+	width: 27px; 
+	margin-top: -1px;
+}
+
+table {
+	border-collapse: separate;
+}
+
+.arrow {
+    border-spacing: 0px;
+    float: right;
+}
+
+.arrow:hover .spot-star{
+    background: #0063DC;
+}
+
+.spot-star
+{
+ right: 5px;
+ font-size: 2.5em; /* This controls the size. */
+ display: inline-block;
+ width: 0.4em;
+ height: 0.4em;
+ border: 0.1em solid #494949;
+ position: relative;
+ border-radius: 0.35em;
+}
+.spot-star::before
+{
+ content: "";
+ display: inline-block;
+ position: absolute;
+ right: -0.25em;
+ bottom: -0.1em;
+ border-width: 0;
+ background: #0063DC;
+ width: 0.35em;
+ height: 0.08em;
+ -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+     -ms-transform: rotate(45deg);
+      -o-transform: rotate(45deg);
+}
