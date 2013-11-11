@@ -1,8 +1,8 @@
  {
   "manifest_version": 2,
-  "name": "HypeMachine Extension",
+  "name": "Hypify Extension",
   "version": "1.44",
-  "description": "Adds a star button to hypemachine to check if the song exists in spotify's library.",
+  "description": "Adds a magnifying glass button to hypemachine to check if the song exists in spotify's library.",
   "web_accessible_resources": ["hypestyles.css"],
   "background": {
     "page": "background.html"
@@ -15,7 +15,6 @@
   },
   "permissions": [
     "tabs",
-    "debugger",
     "http://hypem.com/",
     "http://hypem.com/*/",
     "http://www.hypem.com/",
