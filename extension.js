@@ -33,7 +33,7 @@ var main = function() {
         var re = new RegExp(artistQuery, "gi");
         for ( var i in artistArray ) {
             if (artistArray[i].name.match(re)) {
-                console.log(artistArray[i].name;
+                console.log(artistArray[i].name);
                 return artistArray[i].name;
             }
         }
