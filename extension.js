@@ -32,9 +32,10 @@ var main = function() {
     var checkArtist = function (artistQuery, artistArray){
         var re = new RegExp(artistQuery, "gi");
         for ( var i in artistArray ) {
-            console.log(artistQuery);
-            if (artistArray[i].name.match(re))
+            if (artistArray[i].name.match(re)) {
+                console.log(artistArray[i].name;
                 return artistArray[i].name;
+            }
         }
         return null;
     }
