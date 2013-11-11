@@ -16,6 +16,6 @@ It's super easy to install the extension by following these steps:
 
 4 - Click Load Unpacked Extension and select unzipped folder
 
-5 - A magnifying glass will now be positioned to the right of the heart icon to indicate that a spotify version was found!
+5 - A magnifying glass will now be positioned to the right of the play button to indicate that a spotify version was found!
 
 Eric
