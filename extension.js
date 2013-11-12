@@ -39,11 +39,8 @@ var main = function() {
 			// Remove everything if featured artist
 			else if (featIndex > 0)
 				tempQuery = tempQuery.substring(0, featIndex);
-			// Remove just parens if normal info
-			else 
-				tempQuery = tempQuery.replace("(", "").replace(")", ""); 
-			console.log(tempQuery);
-			return tempQuery;
+			// Remove just parens spotify doesn't like them
+			return tempQuery.replace("(", "").replace(")", "");
 		}
 		else if (trackInfo.className == "remix-link")
 			return (" " + trackInfo.innerText);
@@ -61,7 +58,7 @@ var main = function() {
 			trackInfo = raws[i].children;
 			for ( var j in trackInfo ) // Max 3 spans of title info
 				tempQuery += getSingleQuery(trackInfo[j]);
-			queries.push(tempQuery);
+			queries.push(tempQuery.trim());
 		});
 		return queries;
 	}
@@ -69,7 +66,6 @@ var main = function() {
         var re = new RegExp(artistQuery, "gi");
         for ( var i in artistArray ) {
             if (artistArray[i].name.match(re)) {
-                console.log(artistArray[i].name);
                 return artistArray[i].name;
             }
         }
@@ -129,7 +125,8 @@ var main = function() {
                                 // Reasonable to say that if the artist isn't available on the first page he isn't there
                                 var queryTracks = jsonResult.tracks;
                                 for ( var i in queryTracks ) {
-                                    if (queryTracks[i].name.match(title) && checkArtist(artist, queryTracks[i].artists) !== null) {
+									var re = new RegExp(title, "gi");
+                                    if (queryTracks[i].name.match(re) && checkArtist(artist, queryTracks[i].artists) !== null) {
                                         var spot_button  = document.createElement("a");
                                         spot_button.target = "_top";
                                         spot_button.className = "SpotButton";
