@@ -29,6 +29,42 @@ var main = function() {
             element.attachEvent('on' + type, callback);
     }
 
+	var getSingleQuery = function (trackInfo) {
+		if (trackInfo.className == "base-title") { //bingo
+			var tempQuery = trackInfo.innerText;
+			var featIndex = tempQuery.substring(0).search(/feat/gi);
+			// Remove everything if featured artist w/ parens
+			if (featIndex > 0 && tempQuery.substring(featIndex-1, featIndex) == "(")
+				tempQuery = tempQuery.substring(0, featIndex-1);
+			// Remove everything if featured artist
+			else if (featIndex > 0)
+				tempQuery = tempQuery.substring(0, featIndex);
+			// Remove just parens if normal info
+			else 
+				tempQuery = tempQuery.replace("(", "").replace(")", ""); 
+			console.log(tempQuery);
+			return tempQuery;
+		}
+		else if (trackInfo.className == "remix-link")
+			return (" " + trackInfo.innerText);
+		// Ignoring remix-count
+		return "";
+	}
+	
+	var getSearchQueries = function () {
+		var queries = new Array();
+		var tempQuery;
+		var trackInfo = null;
+		var raws = jQuery('a.track');
+		raws.each(function (i, raw) { // Hypem max loads 20 tracks at a time
+			tempQuery = "";
+			trackInfo = raws[i].children;
+			for ( var j in trackInfo ) // Max 3 spans of title info
+				tempQuery += getSingleQuery(trackInfo[j]);
+			queries.push(tempQuery);
+		});
+		return queries;
+	}
     var checkArtist = function (artistQuery, artistArray){
         var re = new RegExp(artistQuery, "gi");
         for ( var i in artistArray ) {
@@ -69,25 +105,20 @@ var main = function() {
 	// Adds a button next to each track that had matching spotify queries
 	var buttonScript = function() {
 		// Wait for the tracks script to load
-		var tracks = window.displayList['tracks'];
+		var trackList = window.displayList['tracks'];
 		 
-        if (tracks === undefined || tracks.length < 1) {
+        if (trackList === undefined || trackList.length < 1) {
 		 	setTimeout(buttonScript, 1);
 		} 
         else {
 		    // Check if this particular page has been processed
 		    // through a previous call
-            if (jQuery('.dl').length < tracks.length) {
+			var tracks = getSearchQueries();
+            if (jQuery('.dl').length < trackList.length) {
 				jQuery('ul.tools').each(function(index, track) {
-                    var song = tracks[index];
-                    var title = song.song;
-                    var parens = title.indexOf("(");
-                    //strip the parens which usually indicates someone adding additional details in the song title
-                    if (parens > 0)
-                        title = title.substring(0, parens);
+                    var song = trackList[index];
+                    var title = tracks[index];
                     var artist = song.artist;
-                    var id = song.id;
-                    var key = song.key;
                     var hasButton = jQuery(track).data("hasButton");
                     if (typeof(hasButton) === 'undefined' || !hasButton){
                         jQuery.ajax({
