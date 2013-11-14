@@ -8,7 +8,7 @@
     "page": "background.html"
   },
   "content_security_policy": "script-src 'self'; object-src 'self'",
-  "homepage_url": "http://ecmode.com",
+  "homepage_url": "http://ecmode.net",
   "icons": {
     "48": "./images/hype48.jpeg",
     "128": "./images/hype128.png"
