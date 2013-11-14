@@ -66,7 +66,10 @@ var main = function() {
 	}
 	var cleanArtistString = function (artist){
 		var featIndex = artist.substring(0).search(/feat/gi);
-		return artist.substring(0, featIndex).trim();
+		if (featIndex > 0)
+			return artist.substring(0, featIndex).trim();
+		else
+			return artist.trim();
 	}
     var checkArtist = function (artistQuery, artistArray){
         var re = new RegExp(artistQuery, "gi");
