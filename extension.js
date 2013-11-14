@@ -29,6 +29,7 @@ var main = function() {
             element.attachEvent('on' + type, callback);
     }
 
+	// Form a single track query - stripping and adding misc
 	var getSingleQuery = function (trackInfo) {
 		if (trackInfo.className == "base-title") { //bingo
 			var tempQuery = trackInfo.innerText;
@@ -48,6 +49,7 @@ var main = function() {
 		return "";
 	}
 	
+	// Compile all the track queries into an array for later use
 	var getSearchQueries = function () {
 		var queries = new Array();
 		var tempQuery;
