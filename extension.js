@@ -64,6 +64,10 @@ var main = function() {
 		});
 		return queries;
 	}
+	var cleanArtistString = function (artist){
+		var featIndex = artist.substring(0).search(/feat/gi);
+		return artist.substring(0, featIndex).trim();
+	}
     var checkArtist = function (artistQuery, artistArray){
         var re = new RegExp(artistQuery, "gi");
         for ( var i in artistArray ) {
@@ -116,7 +120,7 @@ var main = function() {
 				jQuery('ul.tools').each(function(index, track) {
                     var song = trackList[index];
                     var title = tracks[index];
-                    var artist = song.artist;
+                    var artist = cleanArtistString(song.artist);
                     var hasButton = jQuery(track).data("hasButton");
                     if (typeof(hasButton) === 'undefined' || !hasButton){
                         jQuery.ajax({
