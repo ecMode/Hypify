@@ -40,7 +40,7 @@ var main = function() {
 			// Remove everything if featured artist
 			else if (featIndex > 0)
 				tempQuery = tempQuery.substring(0, featIndex);
-			// Remove just parens spotify doesn't like them
+			// Remove just parens query doesn't like literals
 			return tempQuery.replace("(", "").replace(")", "");
 		}
 		else if (trackInfo.className == "remix-link")
@@ -89,11 +89,27 @@ var main = function() {
         var re = new RegExp(artistQuery, "gi");
         for ( var i in artistArray ) {
             if (artistArray[i].name.match(re)) {
-                return artistArray[i].name;
+                return true;
             }
         }
-        return null;
+        return false;
     }
+	var processData = function (data, title, track, artist, buttonString) {
+		var jsonResult = data;
+		// Reasonable to say that if the artist isn't available on the first page he isn't there
+		var queryTracks = jsonResult.tracks;
+		for ( var i in queryTracks ) {
+			var re = new RegExp(title, "gi");
+			if (checkTitle(title, queryTracks[i].name) && checkArtist(artist, queryTracks[i].artists)) {
+				var spot_button  = document.createElement("a");
+				spot_button.target = "_top";
+				spot_button.className = "SpotButton";
+				spot_button.innerHTML = '<table class="arrow"><tr><td><div class="spot-star"></div></td></tr><tr><td class="' + buttonString + '"></td></tr></table>';
+				jQuery(track).prepend('<li class="dl"><table class="spacer"></table>' + jQuery(spot_button)[0].outerHTML + '</li>');
+				break;
+			}
+		}
+	}
     var generator = function()
     {
         var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
@@ -109,18 +125,19 @@ var main = function() {
     //Here is where we can randomly generate the name of the styles to avoid them checking for specific names.
     //Can add more here if they check additional names.
     //ref:http://jonraasch.com/blog/javascript-style-node
-    var starString = generator();
+    var buttonString = generator();
     var css = document.createElement('style');
     css.type = 'text/css';
-    var styles = '.' + starString;
-    styles += '.arrow:hover .'+ starString +'{ border-top: 10px solid #0063DC; }';
+    var styles = '.' + buttonString;
+    styles += '.arrow:hover .'+ buttonString +'{ border-top: 10px solid #0063DC; }';
      
     //done this way for IE aparantly.
     if (css.styleSheet) 
         css.styleSheet.cssText = styles;
     else 
         css.appendChild(document.createTextNode(styles) );
-    document.getElementsByTagName("head")[0].appendChild(css);    
+    document.getElementsByTagName("head")[0].appendChild(css);  
+	
 	// Adds a button next to each track that had matching spotify queries
 	var buttonScript = function() {
 		// Wait for the tracks script to load
@@ -140,25 +157,12 @@ var main = function() {
                     var artist = cleanArtistString(song.artist);
                     var hasButton = jQuery(track).data("hasButton");
                     if (typeof(hasButton) === 'undefined' || !hasButton){
-                        jQuery.ajax({
+                        jQuery.ajax({ //query spotify's metadata api
                             url: "http://ws.spotify.com/search/1/track.json?q=" + title,
                             crossDomain: true, 
                             success: function (data) {
-                                var jsonResult = data;
-                                // Reasonable to say that if the artist isn't available on the first page he isn't there
-                                var queryTracks = jsonResult.tracks;
-                                for ( var i in queryTracks ) {
-									var re = new RegExp(title, "gi");
-                                    if (checkTitle(title, queryTracks[i].name) && checkArtist(artist, queryTracks[i].artists) !== null) {
-                                        var spot_button  = document.createElement("a");
-                                        spot_button.target = "_top";
-                                        spot_button.className = "SpotButton";
-                                        spot_button.innerHTML = '<table class="arrow"><tr><td><div class="spot-star"></div></td></tr><tr><td class="' + starString + '"></td></tr></table>';
-                                        jQuery(track).prepend('<li class="dl"><table class="spacer"></table>' + jQuery(spot_button)[0].outerHTML + '</li>');
-                                        break;
-                                    }
-                                }
-                            }
+								processData(data, title, track, artist, buttonString);
+							}
                         });
                         jQuery(track).data("hasButton", true);
                     }
