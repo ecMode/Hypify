@@ -71,6 +71,20 @@ var main = function() {
 		else
 			return artist.trim();
 	}
+	//In the scenario where a returned title has punctuation or parens
+	//a straight up string match wont work since I strip all extras for the query
+	//I'm going to split my title query into single words and do individual word matches.
+	//This will increase length of search 2-6x normal I'm sure, but is negligible still
+	//for the accuracy gain.
+	var checkTitle = function (titleQuery, title){
+		var querySplit = titleQuery.split(" ");
+		var status = new Array();
+		for ( var i in querySplit){
+			var re = new RegExp("\\b" + querySplit[i] + "\\b", "gi");
+			status.push(title.match(re) != null);
+		} // if match, all true / can't find false, return true match
+		return jQuery.inArray(false, status) == -1;
+	}
     var checkArtist = function (artistQuery, artistArray){
         var re = new RegExp(artistQuery, "gi");
         for ( var i in artistArray ) {
@@ -135,7 +149,7 @@ var main = function() {
                                 var queryTracks = jsonResult.tracks;
                                 for ( var i in queryTracks ) {
 									var re = new RegExp(title, "gi");
-                                    if (queryTracks[i].name.match(re) && checkArtist(artist, queryTracks[i].artists) !== null) {
+                                    if (checkTitle(title, queryTracks[i].name) && checkArtist(artist, queryTracks[i].artists) !== null) {
                                         var spot_button  = document.createElement("a");
                                         spot_button.target = "_top";
                                         spot_button.className = "SpotButton";
