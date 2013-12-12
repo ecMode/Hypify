@@ -32,13 +32,21 @@ var main = function() {
     var checkArtist = function (artistQuery, artistArray){
         var re = new RegExp(artistQuery, "gi");
         for ( var i in artistArray ) {
-            if (artistArray[i].name.match(re)) {
-                console.log(artistArray[i].name);
-                return artistArray[i].name;
-            }
+            if (artistArray[i].name.match(re))
+                return true;
         }
-        return null;
+        return false;
     }
+
+    var isOfRegion = function (availability, targetRegion){
+	var regionArray = availability.territories.split(" ");
+	for (var i in regionArray){
+	    if (regionArray[i] == targetRegion)
+		return true;
+	}
+	return false;
+    }
+
     var generator = function()
     {
         var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
@@ -66,19 +74,19 @@ var main = function() {
     else 
         css.appendChild(document.createTextNode(styles) );
     document.getElementsByTagName("head")[0].appendChild(css);    
-	// Adds a button next to each track that had matching spotify queries
-	var buttonScript = function() {
-		// Wait for the tracks script to load
-		var tracks = window.displayList['tracks'];
+    // Adds a button next to each track that had matching spotify queries
+    var buttonScript = function() {
+	// Wait for the tracks script to load
+	var tracks = window.displayList['tracks'];
 		 
         if (tracks === undefined || tracks.length < 1) {
 		 	setTimeout(buttonScript, 1);
 		} 
         else {
-		    // Check if this particular page has been processed
-		    // through a previous call
+	    // Check if this particular page has been processed
+	    // through a previous call
             if (jQuery('.dl').length < tracks.length) {
-				jQuery('ul.tools').each(function(index, track) {
+		jQuery('ul.tools').each(function(index, track) {
                     var song = tracks[index];
                     var title = song.song;
                     var parens = title.indexOf("(");
@@ -98,7 +106,7 @@ var main = function() {
                                 // Reasonable to say that if the artist isn't available on the first page he isn't there
                                 var queryTracks = jsonResult.tracks;
                                 for ( var i in queryTracks ) {
-                                    if (queryTracks[i].name.match(title) && checkArtist(artist, queryTracks[i].artists) !== null) {
+                                    if (queryTracks[i].name.match(title) && checkArtist(artist, queryTracks[i].artists) && isOfRegion(queryTracks[i].availability, "US") {
                                         var spot_button  = document.createElement("a");
                                         spot_button.target = "_top";
                                         spot_button.className = "SpotButton";
@@ -116,13 +124,12 @@ var main = function() {
         }
     };//buttonscript
 	
-	// Run it right away
-	buttonScript();
+    // Run it right away
+    buttonScript();
   
     jQuery(document).ajaxComplete(function(event,request, settings){
-		buttonScript();
+	buttonScript();
     });
-  
 };
 
 // Lets create the script objects
