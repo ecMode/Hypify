@@ -6,89 +6,90 @@ var stylesheetUrl = chrome.extension.getURL("hypestyles.css");
 // This is all the JS that will be injected in the document body
 var main = function() {
     /**
-    * Return outerHTML for the first element in a jQuery object,
-    * or an empty string if the jQuery object is empty;  
-    */
+     * Return outerHTML for the first element in a jQuery object,
+     * or an empty string if the jQuery object is empty;  
+     */
     jQuery.fn.outerHTML = function() {
         return (this[0]) ? this[0].outerHTML : '';  
     };
-  
+    
     /**
-    * Utility to wrap the different behaviors between W3C-compliant browsers
-    * and IE when adding event handlers.
-    *
-    * @param {Object} element Object on which to attach the event listener.
-    * @param {string} type A string representing the event type to listen for
-    *     (e.g. load, click, etc.).
-    * @param {function()} callback The function that receives the notification.
-    */
+     * Utility to wrap the different behaviors between W3C-compliant browsers
+     * and IE when adding event handlers.
+     *
+     * @param {Object} element Object on which to attach the event listener.
+     * @param {string} type A string representing the event type to listen for
+     *     (e.g. load, click, etc.).
+     * @param {function()} callback The function that receives the notification.
+     */
     function addListener(element, type, callback) {
         if (element.addEventListener) 
             element.addEventListener(type, callback);
         else if (element.attachEvent) 
             element.attachEvent('on' + type, callback);
     }
-
-	// Form a single track query - stripping and adding misc
-	var getSingleQuery = function (trackInfo) {
-		if (trackInfo.className == "base-title") { //bingo
-			var tempQuery = trackInfo.innerText;
-			var featIndex = tempQuery.substring(0).search(/feat/gi);
-			// Remove everything if featured artist w/ parens
-			if (featIndex > 0 && tempQuery.substring(featIndex-1, featIndex) == "(")
-				tempQuery = tempQuery.substring(0, featIndex-1);
-			// Remove everything if featured artist
-			else if (featIndex > 0)
-				tempQuery = tempQuery.substring(0, featIndex);
-			// Remove just parens query doesn't like literals
-			return tempQuery.replace("(", "").replace(")", "");
-		}
-		else if (trackInfo.className == "remix-link")
-			return (" " + trackInfo.innerText);
-		// Ignoring remix-count
-		return "";
+    
+    // Form a single track query - stripping and adding misc
+    var getSingleQuery = function (trackInfo) {
+	if (trackInfo.className == "base-title") { //bingo
+	    var tempQuery = trackInfo.innerText;
+	    var featIndex = tempQuery.substring(0).search(/feat/gi);
+	    // Remove everything if featured artist w/ parens
+	    if (featIndex > 0 && tempQuery.substring(featIndex-1, featIndex) == "(")
+		tempQuery = tempQuery.substring(0, featIndex-1);
+	    // Remove everything if featured artist
+	    else if (featIndex > 0)
+		tempQuery = tempQuery.substring(0, featIndex);
+	    // Remove just parens query doesn't like literals
+	    return tempQuery.replace("(", "").replace(")", "");
 	}
-	
-	// Compile all the track queries into an array for later use
-	var getSearchQueries = function () {
-		var queries = new Array();
-		var tempQuery;
-		var trackInfo = null;
-		var raws = jQuery('a.track');
-		raws.each(function (i, raw) { // Hypem max loads 20 tracks at a time
-			tempQuery = "";
-			trackInfo = raws[i].children;
-			for ( var j in trackInfo ) // Max 3 spans of title info
-				tempQuery += getSingleQuery(trackInfo[j]);
-			queries.push(tempQuery.trim());
-		});
-		return queries;
-	}
-	var cleanArtistString = function (artist){
-		var featIndex = artist.substring(0).search(/feat/gi);
-		if (featIndex > 0)
-			return artist.substring(0, featIndex).trim();
-		else
-			return artist.trim();
-	}
-	//In the scenario where a returned title has punctuation or parens
-	//a straight up string match wont work since I strip all extras for the query
-	//I'm going to split my title query into single words and do individual word matches.
-	//This will increase length of search 2-6x normal I'm sure, but is negligible still
-	//for the accuracy gain.
-	var checkTitle = function (titleQuery, title){
-		var querySplit = titleQuery.split(" ");
-		var status = new Array();
-		for ( var i in querySplit){
-			var re = new RegExp("\\b" + querySplit[i] + "\\b", "gi");
-			status.push(title.match(re) != null);
-		} // if match, all true / can't find false, return true match
-		return jQuery.inArray(false, status) == -1;
-	}
+	else if (trackInfo.className == "remix-link")
+	    return (" " + trackInfo.innerText);
+	// Ignoring remix-count
+	return "";
+    }
+    
+    // Compile all the track queries into an array for later use
+    var getSearchQueries = function () {
+	var queries = new Array();
+	var tempQuery;
+	var trackInfo = null;
+	var raws = jQuery('a.track');
+	raws.each(function (i, raw) { // Hypem max loads 20 tracks at a time
+	    tempQuery = "";
+	    trackInfo = raws[i].children;
+	    for ( var j in trackInfo ) // Max 3 spans of title info
+		tempQuery += getSingleQuery(trackInfo[j]);
+	    queries.push(tempQuery.trim());
+	});
+	return queries;
+    }
+    
+    var cleanArtistString = function (artist){
+	var featIndex = artist.substring(0).search(/feat/gi);
+	if (featIndex > 0)
+	    return artist.substring(0, featIndex).trim();
+	else
+	    return artist.trim();
+    }
+    //In the scenario where a returned title has punctuation or parens
+    //a straight up string match wont work since I strip all extras for the query
+    //I'm going to split my title query into single words and do individual word matches.
+    //This will increase length of search 2-6x normal I'm sure, but is negligible still
+    //for the accuracy gain.
+    var checkTitle = function (titleQuery, title){
+	var querySplit = titleQuery.split(" ");
+	var status = new Array();
+	for ( var i in querySplit){
+	    var re = new RegExp("\\b" + querySplit[i] + "\\b", "gi");
+	    status.push(title.match(re) != null);
+	} // if match, all true / can't find false, return true match
+	return jQuery.inArray(false, status) == -1;
+    }
+    
     var checkArtist = function (artistQuery, artistArray){
         var re = new RegExp(artistQuery, "gi");
         for ( var i in artistArray ) {
-<<<<<<< HEAD
             if (artistArray[i].name.match(re))
                 return true;
         }
@@ -104,30 +105,26 @@ var main = function() {
 	return false;
     }
 
-=======
-            if (artistArray[i].name.match(re)) {
-                return true;
-            }
-        }
-        return false;
-    }
-	var processData = function (data, title, track, artist, buttonString) {
-		var jsonResult = data;
-		// Reasonable to say that if the artist isn't available on the first page he isn't there
-		var queryTracks = jsonResult.tracks;
-		for ( var i in queryTracks ) {
-			var re = new RegExp(title, "gi");
-			if (checkTitle(title, queryTracks[i].name) && checkArtist(artist, queryTracks[i].artists)) {
-				var spot_button  = document.createElement("a");
-				spot_button.target = "_top";
-				spot_button.className = "SpotButton";
-				spot_button.innerHTML = '<table class="arrow"><tr><td><div class="spot-star"></div></td></tr><tr><td class="' + buttonString + '"></td></tr></table>';
-				jQuery(track).prepend('<li class="dl"><table class="spacer"></table>' + jQuery(spot_button)[0].outerHTML + '</li>');
-				break;
-			}
-		}
+    var processData = function (data, title, track, artist, buttonString) {
+	var jsonResult = data;
+	// Reasonable to say that if the artist isn't available on the first page he isn't there
+	var queryTracks = jsonResult.tracks;
+	for ( var i in queryTracks ) {
+	    var re = new RegExp(title, "gi");
+	    var name = queryTracks[i].name;
+	    var artists = queryTracks[i].artists;
+	    var album = queryTracks[i].album;
+	    if (checkTitle(title, name) && checkArtist(artist, artists) && isOfRegion(album.availability, "US")) {
+		var spot_button  = document.createElement("a");
+		spot_button.target = "_top";
+		spot_button.className = "SpotButton";
+		spot_button.innerHTML = '<table class="arrow"><tr><td><div class="spot-star"></div></td></tr><tr><td class="' + buttonString + '"></td></tr></table>';
+		jQuery(track).prepend('<li class="dl"><table class="spacer"></table>' + jQuery(spot_button)[0].outerHTML + '</li>');
+		break;
+	    }
 	}
->>>>>>> da34f1121a3727d77868d7ad42d949e059f18512
+    }
+    
     var generator = function()
     {
         var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
@@ -139,7 +136,7 @@ var main = function() {
         }
         return randomstring;
     };
- 
+    
     //Here is where we can randomly generate the name of the styles to avoid them checking for specific names.
     //Can add more here if they check additional names.
     //ref:http://jonraasch.com/blog/javascript-style-node
@@ -148,91 +145,47 @@ var main = function() {
     css.type = 'text/css';
     var styles = '.' + buttonString;
     styles += '.arrow:hover .'+ buttonString +'{ border-top: 10px solid #0063DC; }';
-     
+    
     //done this way for IE aparantly.
     if (css.styleSheet) 
         css.styleSheet.cssText = styles;
     else 
         css.appendChild(document.createTextNode(styles) );
-<<<<<<< HEAD
     document.getElementsByTagName("head")[0].appendChild(css);    
     // Adds a button next to each track that had matching spotify queries
     var buttonScript = function() {
 	// Wait for the tracks script to load
-	var tracks = window.displayList['tracks'];
-=======
-    document.getElementsByTagName("head")[0].appendChild(css);  
-	
-	// Adds a button next to each track that had matching spotify queries
-	var buttonScript = function() {
-		// Wait for the tracks script to load
-		var trackList = window.displayList['tracks'];
->>>>>>> da34f1121a3727d77868d7ad42d949e059f18512
-		 
-        if (trackList === undefined || trackList.length < 1) {
-		 	setTimeout(buttonScript, 1);
-		} 
-        else {
-<<<<<<< HEAD
+	var trackList = window.displayList['tracks'];
+	if (trackList === undefined || trackList.length < 1)
+	    setTimeout(buttonScript, 1);
+	else {
 	    // Check if this particular page has been processed
 	    // through a previous call
-            if (jQuery('.dl').length < tracks.length) {
+	    var tracks = getSearchQueries();
+	    if (jQuery('.dl').length < trackList.length) {
 		jQuery('ul.tools').each(function(index, track) {
-                    var song = tracks[index];
-                    var title = song.song;
-                    var parens = title.indexOf("(");
-                    //strip the parens which usually indicates someone adding additional details in the song title
-                    if (parens > 0)
-                        title = title.substring(0, parens);
-                    var artist = song.artist;
-                    var id = song.id;
-                    var key = song.key;
-=======
-		    // Check if this particular page has been processed
-		    // through a previous call
-			var tracks = getSearchQueries();
-            if (jQuery('.dl').length < trackList.length) {
-				jQuery('ul.tools').each(function(index, track) {
-                    var song = trackList[index];
-                    var title = tracks[index];
-                    var artist = cleanArtistString(song.artist);
->>>>>>> da34f1121a3727d77868d7ad42d949e059f18512
-                    var hasButton = jQuery(track).data("hasButton");
-                    if (typeof(hasButton) === 'undefined' || !hasButton){
-                        jQuery.ajax({ //query spotify's metadata api
-                            url: "http://ws.spotify.com/search/1/track.json?q=" + title,
-                            crossDomain: true, 
-                            success: function (data) {
-<<<<<<< HEAD
-                                var jsonResult = data;
-                                // Reasonable to say that if the artist isn't available on the first page he isn't there
-                                var queryTracks = jsonResult.tracks;
-                                for ( var i in queryTracks ) {
-                                    if (queryTracks[i].name.match(title) && checkArtist(artist, queryTracks[i].artists) && isOfRegion(queryTracks[i].availability, "US") {
-                                        var spot_button  = document.createElement("a");
-                                        spot_button.target = "_top";
-                                        spot_button.className = "SpotButton";
-                                        spot_button.innerHTML = '<table class="arrow"><tr><td><div class="spot-star"></div></td></tr><tr><td class="' + starString + '"></td></tr></table>';
-                                        jQuery(track).prepend('<li class="dl"><table class="spacer"></table>' + jQuery(spot_button)[0].outerHTML + '</li>');
-                                        break;
-                                    }
-                                }
-                            }
-=======
-								processData(data, title, track, artist, buttonString);
-							}
->>>>>>> da34f1121a3727d77868d7ad42d949e059f18512
-                        });
-                        jQuery(track).data("hasButton", true);
-                    }
-                });//each		
-            }
-        }
+		    var song = trackList[index];
+		    var title = tracks[index];
+		    var artist = cleanArtistString(song.artist);
+		    var hasButton = jQuery(track).data("hasButton");
+		    if (typeof(hasButton) === 'undefined' || !hasButton){
+			jQuery.ajax({ //query spotify's metadata api
+			    url: "http://ws.spotify.com/search/1/track.json?q=" + title,
+			    crossDomain: true, 
+			    success: function (data){
+				processData(data, title, track, artist, buttonString);
+			    }			    
+			});
+			jQuery(track).data("hasButton", true);
+		    }
+		});//each
+	    }
+	}		
     };//buttonscript
-	
+    
     // Run it right away
     buttonScript();
-  
+    
     jQuery(document).ajaxComplete(function(event,request, settings){
 	buttonScript();
     });
@@ -251,3 +204,4 @@ injectedCSS.type = 'text/css';
 injectedCSS.rel = 'stylesheet';
 injectedCSS.href = stylesheetUrl;
 (document.body || document.head).appendChild(injectedCSS);
+    
