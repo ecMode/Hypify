@@ -29,6 +29,18 @@ var main = function() {
             element.attachEvent('on' + type, callback);
     }
     
+    /***
+     * The name _dlExtGATracker is chosen so as not to conflict with HypeMachine's possible
+     * use of Google Analytics object.
+     */
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','spotGATracker');
+    
+    spotGATracker('create', 'UA-46433333-1', 'hypem.com');
+    spotGATracker('send', 'pageview');
+    
     // Form a single track query - stripping and adding misc
     var getSingleQuery = function (trackInfo) {
 	if (trackInfo.className == "base-title") { //bingo
@@ -68,7 +80,7 @@ var main = function() {
     var cleanArtistString = function (artist){
 	var featIndex = artist.substring(0).search(/feat/gi);
 	if (featIndex > 0)
-	    return artist.substring(0, featIndex).trim();
+	    return artist.substring(0, featIndex - 1).trim();
 	else
 	    return artist.trim();
     }
@@ -119,6 +131,8 @@ var main = function() {
 		spot_button.target = "_top";
 		spot_button.className = "SpotButton";
 		spot_button.innerHTML = '<table class="arrow"><tr><td><div class="spot-star"></div></td></tr><tr><td class="' + buttonString + '"></td></tr></table>';
+		spot_button.href = "http://open.spotify.com/track/" + queryTracks[i].href.split(":")[2];
+		spot_button.target = "_blank";
 		jQuery(track).prepend('<li class="dl"><table class="spacer"></table>' + jQuery(spot_button)[0].outerHTML + '</li>');
 		break;
 	    }
@@ -182,7 +196,11 @@ var main = function() {
 	    }
 	}		
     };//buttonscript
-    
+   
+    jQuery('ul.tools').on('click', '.SpotButton', function() {
+	spotGATracker('send', 'event', 'track-lookup-button', 'click', 'track-lookup', 1);
+    });
+ 
     // Run it right away
     buttonScript();
     
