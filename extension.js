@@ -108,33 +108,32 @@ var main = function() {
         return false;
     }
 
-    var isOfRegion = function (availability, targetRegion){
-		var regionArray = availability.territories.split(" ");
-		for (var i in regionArray){
-			if (regionArray[i] == targetRegion)
-			return true;
-		}
-		return false;
+    var isOfRegion = function (regionArray, targetRegion){
+		return regionArray.indexOf(targetRegion) > -1;
     }
 
     var processData = function (data, title, track, artist, buttonString) {
 	var jsonResult = data;
 	// Reasonable to say that if the artist isn't available on the first page he isn't there
-	var queryTracks = jsonResult.tracks;
+	var queryTracks = jsonResult.tracks.items;
 	for ( var i in queryTracks ) {
 	    var re = new RegExp(title, "gi");
 	    var name = queryTracks[i].name;
 	    var artists = queryTracks[i].artists;
 	    var album = queryTracks[i].album;
-	    if (checkTitle(title, name) && checkArtist(artist, artists) && isOfRegion(album.availability, "US")) {
-		var spot_button  = document.createElement("a");
-		spot_button.target = "_top";
-		spot_button.className = "SpotButton";
-		spot_button.innerHTML = '<table class="arrow"><tr><td><div class="spot-star"></div></td></tr><tr><td class="' + buttonString + '"></td></tr></table>';
-		spot_button.href = "http://open.spotify.com/track/" + queryTracks[i].href.split(":")[2];
-		spot_button.target = "_blank";
-		jQuery(track).prepend('<li class="dl"><table class="spacer"></table>' + jQuery(spot_button)[0].outerHTML + '</li>');
-		break;
+		var availableMarkets = queryTracks[i].available_markets
+		
+	    if (checkTitle(title, name) && checkArtist(artist, artists) && isOfRegion(availableMarkets, "US")) {
+			var spot_button  = document.createElement("a");
+			spot_button.target = "_top";
+			spot_button.className = "SpotButton";
+			spot_button.innerHTML = '<table class="arrow"><tr><td><div class="spot-star"></div></td></tr><tr><td class="' + buttonString + '"></td></tr></table>';
+			if (!queryTracks[i].external_urls.hasOwnProperty('spotify'))
+				break;
+			spot_button.href = queryTracks[i].external_urls.spotify;
+			spot_button.target = "_blank";
+			jQuery(track).prepend('<li class="dl"><table class="spacer"></table>' + jQuery(spot_button)[0].outerHTML + '</li>');
+			break;
 	    }
 	}
     }
@@ -184,7 +183,7 @@ var main = function() {
 				var hasButton = jQuery(track).data("hasButton");
 				if (typeof(hasButton) === 'undefined' || !hasButton){
 					jQuery.ajax({ //query spotify's metadata api
-						url: "http://ws.spotify.com/search/1/track.json?q=" + title,
+						url: "https://api.spotify.com/v1/search?q=" + title + "&type=track",
 						crossDomain: true, 
 						success: function (data){
 							processData(data, title, track, artist, buttonString);
@@ -195,18 +194,47 @@ var main = function() {
 			});//each
 			}
 		}		
-    };//buttonscript
+    };//buttonScript
+	
+	function injectSpotifyLogin () {
+		$('.menu').append('<li><a id="spotify-auth">Spotify Login</a></li>');
+		$('#spotify-auth').click(function() {
+		
+		});
+	};//injectSpotifyLogin
    
+	function login() {
+		var width = 400,
+		height = 500;
+		var left = (screen.width / 2) - (width / 2);
+		var top = (screen.height / 2) - (height / 2);
+
+		var params = {
+			client_id: '5fe01282e94241328a84e7c5cc169164',
+			redirect_uri: 'http://jsfiddle.net/3744J/2/show/',
+			scope: 'user-read-private user-read-email',
+			response_type: 'token'
+		};
+		authWindow = window.open(
+			"https://accounts.spotify.com/authorize?" + toQueryString(params),
+			"Spotify",
+			'menubar=no,location=no,resizable=no,scrollbars=no,status=no, width=' + width + ', height=' + height + ', top=' + top + ', left=' + left
+		);
+	}
+
     jQuery('ul.tools').on('click', '.SpotButton', function() {
 		spotGATracker('send', 'event', 'track-lookup-button', 'click', 'track-lookup', 1);
     });
  
     // Run it right away
     buttonScript();
+	injectSpotifyLogin();
     
     jQuery(document).ajaxComplete(function(event,request, settings){
 		buttonScript();
     });
+	
+	
 };
 
 // Lets create the script objects
