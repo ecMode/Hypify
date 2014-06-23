@@ -46,6 +46,7 @@ table {
  border: 0.1em solid #494949;
  position: relative;
  border-radius: 0.35em;
+ margin: 8px 6px 0px 8px;
 }
 .spot-star::before
 {

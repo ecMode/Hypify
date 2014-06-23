@@ -43,46 +43,46 @@ var main = function() {
     
     // Form a single track query - stripping and adding misc
     var getSingleQuery = function (trackInfo) {
-	if (trackInfo.className == "base-title") { //bingo
-	    var tempQuery = trackInfo.innerText;
-	    var featIndex = tempQuery.substring(0).search(/feat/gi);
-	    // Remove everything if featured artist w/ parens
-	    if (featIndex > 0 && tempQuery.substring(featIndex-1, featIndex) == "(")
-		tempQuery = tempQuery.substring(0, featIndex-1);
-	    // Remove everything if featured artist
-	    else if (featIndex > 0)
-		tempQuery = tempQuery.substring(0, featIndex);
-	    // Remove just parens query doesn't like literals
-	    return tempQuery.replace("(", "").replace(")", "");
-	}
-	else if (trackInfo.className == "remix-link")
-	    return (" " + trackInfo.innerText);
-	// Ignoring remix-count
-	return "";
+		if (trackInfo.className == "base-title") { //bingo
+			var tempQuery = trackInfo.innerText;
+			var featIndex = tempQuery.substring(0).search(/feat/gi);
+			// Remove everything if featured artist w/ parens
+			if (featIndex > 0 && tempQuery.substring(featIndex-1, featIndex) == "(")
+			tempQuery = tempQuery.substring(0, featIndex-1);
+			// Remove everything if featured artist
+			else if (featIndex > 0)
+			tempQuery = tempQuery.substring(0, featIndex);
+			// Remove just parens query doesn't like literals
+			return tempQuery.replace("(", "").replace(")", "");
+		}
+		else if (trackInfo.className == "remix-link")
+			return (" " + trackInfo.innerText);
+		// Ignoring remix-count
+		return "";
     }
     
     // Compile all the track queries into an array for later use
     var getSearchQueries = function () {
-	var queries = new Array();
-	var tempQuery;
-	var trackInfo = null;
-	var raws = jQuery('a.track');
-	raws.each(function (i, raw) { // Hypem max loads 20 tracks at a time
-	    tempQuery = "";
-	    trackInfo = raws[i].children;
-	    for ( var j in trackInfo ) // Max 3 spans of title info
-		tempQuery += getSingleQuery(trackInfo[j]);
-	    queries.push(tempQuery.trim());
-	});
-	return queries;
+		var queries = [];
+		var tempQuery;
+		var trackInfo = null;
+		var raws = jQuery('a.track');
+		raws.each(function (i, raw) { // Hypem max loads 20 tracks at a time
+			tempQuery = "";
+			trackInfo = raws[i].children;
+			for ( var j in trackInfo ) // Max 3 spans of title info
+			tempQuery += getSingleQuery(trackInfo[j]);
+			queries.push(tempQuery.trim());
+		});
+		return queries;
     }
     
     var cleanArtistString = function (artist){
-	var featIndex = artist.substring(0).search(/feat/gi);
-	if (featIndex > 0)
-	    return artist.substring(0, featIndex - 1).trim();
-	else
-	    return artist.trim();
+		var featIndex = artist.substring(0).search(/feat/gi);
+		if (featIndex > 0)
+			return artist.substring(0, featIndex - 1).trim();
+		else
+			return artist.trim();
     }
     //In the scenario where a returned title has punctuation or parens
     //a straight up string match wont work since I strip all extras for the query
@@ -90,13 +90,13 @@ var main = function() {
     //This will increase length of search 2-6x normal I'm sure, but is negligible still
     //for the accuracy gain.
     var checkTitle = function (titleQuery, title){
-	var querySplit = titleQuery.split(" ");
-	var status = new Array();
-	for ( var i in querySplit){
-	    var re = new RegExp("\\b" + querySplit[i] + "\\b", "gi");
-	    status.push(title.match(re) != null);
-	} // if match, all true / can't find false, return true match
-	return jQuery.inArray(false, status) == -1;
+		var querySplit = titleQuery.split(" ");
+		var status = [];
+		for ( var i in querySplit){
+			var re = new RegExp("\\b" + querySplit[i] + "\\b", "gi");
+			status.push(title.match(re) != null);
+		} // if match, all true / can't find false, return true match
+		return jQuery.inArray(false, status) == -1;
     }
     
     var checkArtist = function (artistQuery, artistArray){
@@ -109,12 +109,12 @@ var main = function() {
     }
 
     var isOfRegion = function (availability, targetRegion){
-	var regionArray = availability.territories.split(" ");
-	for (var i in regionArray){
-	    if (regionArray[i] == targetRegion)
-		return true;
-	}
-	return false;
+		var regionArray = availability.territories.split(" ");
+		for (var i in regionArray){
+			if (regionArray[i] == targetRegion)
+			return true;
+		}
+		return false;
     }
 
     var processData = function (data, title, track, artist, buttonString) {
@@ -168,44 +168,44 @@ var main = function() {
     document.getElementsByTagName("head")[0].appendChild(css);    
     // Adds a button next to each track that had matching spotify queries
     var buttonScript = function() {
-	// Wait for the tracks script to load
-	var trackList = window.displayList['tracks'];
-	if (trackList === undefined || trackList.length < 1)
-	    setTimeout(buttonScript, 1);
-	else {
-	    // Check if this particular page has been processed
-	    // through a previous call
-	    var tracks = getSearchQueries();
-	    if (jQuery('.dl').length < trackList.length) {
-		jQuery('ul.tools').each(function(index, track) {
-		    var song = trackList[index];
-		    var title = tracks[index];
-		    var artist = cleanArtistString(song.artist);
-		    var hasButton = jQuery(track).data("hasButton");
-		    if (typeof(hasButton) === 'undefined' || !hasButton){
-			jQuery.ajax({ //query spotify's metadata api
-			    url: "http://ws.spotify.com/search/1/track.json?q=" + title,
-			    crossDomain: true, 
-			    success: function (data){
-				processData(data, title, track, artist, buttonString);
-			    }			    
-			});
-			jQuery(track).data("hasButton", true);
-		    }
-		});//each
-	    }
-	}		
+		// Wait for the tracks script to load
+		var trackList = window.displayList['tracks'];
+		if (trackList === undefined || trackList.length < 1)
+			setTimeout(buttonScript, 1);
+		else {
+			// Check if this particular page has been processed
+			// through a previous call
+			var tracks = getSearchQueries();
+			if (jQuery('.dl').length < trackList.length) {
+			jQuery('ul.tools').each(function(index, track) {
+				var song = trackList[index];
+				var title = tracks[index];
+				var artist = cleanArtistString(song.artist);
+				var hasButton = jQuery(track).data("hasButton");
+				if (typeof(hasButton) === 'undefined' || !hasButton){
+					jQuery.ajax({ //query spotify's metadata api
+						url: "http://ws.spotify.com/search/1/track.json?q=" + title,
+						crossDomain: true, 
+						success: function (data){
+							processData(data, title, track, artist, buttonString);
+						}	    
+					});
+					jQuery(track).data("hasButton", true);
+				}
+			});//each
+			}
+		}		
     };//buttonscript
    
     jQuery('ul.tools').on('click', '.SpotButton', function() {
-	spotGATracker('send', 'event', 'track-lookup-button', 'click', 'track-lookup', 1);
+		spotGATracker('send', 'event', 'track-lookup-button', 'click', 'track-lookup', 1);
     });
  
     // Run it right away
     buttonScript();
     
     jQuery(document).ajaxComplete(function(event,request, settings){
-	buttonScript();
+		buttonScript();
     });
 };
 
