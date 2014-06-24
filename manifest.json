@@ -22,6 +22,9 @@
     "http://*/", 
     "https://*/"
   ],
+  "externally_connectable": {
+	"matches": ["http://hypem.com/*"]
+  },
   "content_scripts":[
   {
 	"matches": ["http://hypem.com/*", "https://hypem.com/*"], 

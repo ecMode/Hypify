@@ -196,10 +196,30 @@ var main = function() {
 		}		
     };//buttonScript
 	
+	function receiveMessage(event){
+		if (event.origin != 'http://ecmode.github.io') {
+			return;
+		}
+		if (authWindow) {
+			authWindow.close();
+		}
+		showInfo(event.data);
+	}
+	function toQueryString(obj) {
+		var parts = [];
+		for (var i in obj) {
+			if (obj.hasOwnProperty(i)) {
+				parts.push(encodeURIComponent(i) + "=" + encodeURIComponent(obj[i]));
+			}
+		}
+		return parts.join("&");
+	}
+	var authWindow = null;
+
 	function injectSpotifyLogin () {
 		$('.menu').append('<li><a id="spotify-auth">Spotify Login</a></li>');
 		$('#spotify-auth').click(function() {
-		
+			login();
 		});
 	};//injectSpotifyLogin
    
@@ -210,8 +230,8 @@ var main = function() {
 		var top = (screen.height / 2) - (height / 2);
 
 		var params = {
-			client_id: '5fe01282e94241328a84e7c5cc169164',
-			redirect_uri: 'http://jsfiddle.net/3744J/2/show/',
+			client_id: 'cacf8c9569be43b5ae5c183254abbb87',
+			redirect_uri: 'http://ecmode.github.io/response',
 			scope: 'user-read-private user-read-email',
 			response_type: 'token'
 		};
@@ -221,15 +241,39 @@ var main = function() {
 			'menubar=no,location=no,resizable=no,scrollbars=no,status=no, width=' + width + ', height=' + height + ', top=' + top + ', left=' + left
 		);
 	}
+	
+	function showInfo(accessToken) {
+		// fetch information about me
+		$.ajax({
+			url: 'https://api.spotify.com/v1/me',
+			headers: {
+				'Authorization': 'Bearer ' + accessToken
+			},
+			success: function(response) {
+				var source = document.getElementById('loggedin-template').innerHTML;
+				var template = Handlebars.compile(source);
+				var data = response;
+				
+				document.getElementById('loggedin').innerHTML = template(data);
+				
+				$('div#login').hide();
+				$('div#loggedin').show();
+			}
+		});
+	}
 
     jQuery('ul.tools').on('click', '.SpotButton', function() {
 		spotGATracker('send', 'event', 'track-lookup-button', 'click', 'track-lookup', 1);
     });
  
+		debugger;
     // Run it right away
     buttonScript();
 	injectSpotifyLogin();
-    
+	$(function(){
+		window.addEventListener('message', receiveMessage);
+	});
+	
     jQuery(document).ajaxComplete(function(event,request, settings){
 		buttonScript();
     });
