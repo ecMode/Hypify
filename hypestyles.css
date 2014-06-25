@@ -60,14 +60,30 @@ table {
 	-o-transform: rotate(45deg);
 }
 
+#spotify-auth {
+	cursor: pointer;
+}
+
+#playlist-info {
+	cursor: pointer;
+    overflow: scroll;
+    overflow-x: hidden;
+	max-height: 480px;
+}
+
+.hypcontainer{
+	cursor: pointer;
+}
+
 .add{
 	position:relative;
 	width:0.2em;
 	height:1em;
 	background: #2C2C2C;
 	font-size: 22px;
-	left: -13px;
+	left: 15px;
 	top: 7px;
+	cursor: pointer;
 }
 .add:after{
 	content: "";

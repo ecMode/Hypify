@@ -1,6 +1,5 @@
 // Extension main script
 // Purpose of the extension is to auto query hype machine tracks to see if they exist in spotify
-// As of now I don't see any methods to add to playlist
 var stylesheetUrl = chrome.extension.getURL("hypestyles.css");
 
 // This is all the JS that will be injected in the document body
@@ -9,7 +8,7 @@ var main = function() {
      * Return outerHTML for the first element in a jQuery object,
      * or an empty string if the jQuery object is empty;  
      */
-    jQuery.fn.outerHTML = function() {
+    $.fn.outerHTML = function() {
         return (this[0]) ? this[0].outerHTML : '';  
     };
     
@@ -66,7 +65,7 @@ var main = function() {
 		var queries = [];
 		var tempQuery;
 		var trackInfo = null;
-		var raws = jQuery('a.track');
+		var raws = $('a.track');
 		raws.each(function (i, raw) { // Hypem max loads 20 tracks at a time
 			tempQuery = "";
 			trackInfo = raws[i].children;
@@ -96,7 +95,7 @@ var main = function() {
 			var re = new RegExp("\\b" + querySplit[i] + "\\b", "gi");
 			status.push(title.match(re) != null);
 		} // if match, all true / can't find false, return true match
-		return jQuery.inArray(false, status) == -1;
+		return $.inArray(false, status) == -1;
     }
     
     var checkArtist = function (artistQuery, artistArray){
@@ -122,19 +121,27 @@ var main = function() {
 		    var artists = queryTracks[i].artists;
 		    var album = queryTracks[i].album;
 			var availableMarkets = queryTracks[i].available_markets
+			var uri = queryTracks[i].uri;
 			
 		    if (checkTitle(title, name) && checkArtist(artist, artists) && isOfRegion(availableMarkets, "US")) {
 				var spot_button  = document.createElement("a");
+				var action = targetPlaylist === null ? 'search' : 'add';
 				spot_button.target = "_top";
 				spot_button.className = "SpotButton";
-				spot_button.innerHTML = '<table class="arrow"><tr><td><div class="search"></div></td></tr><tr><td class="' + buttonString + '"></td></tr></table>';
+				spot_button.innerHTML = '<table class="arrow"><tr><td><div class="hypcontainer" style="height:34px;width:34px;"><div class="' + action + '"></div></div></td></tr><tr><td class="' + buttonString + '"></td></tr></table>';
+				spot_button.setAttribute('uri-data', uri);
 				if (!queryTracks[i].external_urls.hasOwnProperty('spotify'))
 					break;
-				spot_button.addEventListener('click', function (){
-					alert('blasjdlkfsdf');
-					window.open(queryTracks[i].external_urls.spotify);
-				});
-				jQuery(track).prepend('<li class="dl"><table class="spacer"></table>' + jQuery(spot_button)[0].outerHTML + '</li>');
+				$(track).prepend('<li class="dl"><table class="spacer"></table>' + $(spot_button)[0].outerHTML + '</li>');
+				if (action == 'search'){
+					$('.SpotButton[uri-data="' + uri + '"]').click(function () {
+						window.open(queryTracks[i].external_urls.spotify);
+					});
+				} else {
+					$('.SpotButton[uri-data="' + uri + '"]').click(function (){
+						addToPlaylist($(this).attr('uri-data'));
+					});
+				}
 				break;
 		    }
 		}
@@ -170,33 +177,33 @@ var main = function() {
     var buttonScript = function() {
 		// Wait for the tracks script to load
 		var trackList = window.displayList['tracks'];
-		if (trackList === undefined || trackList.length < 1)
+		if (trackList === undefined || trackList.length < 1) {
 			setTimeout(buttonScript, 1);
-		else {
+		} else {
 			// Check if this particular page has been processed
 			// through a previous call
 			var tracks = getSearchQueries();
-			if (jQuery('.dl').length < trackList.length) {
-			jQuery('ul.tools').each(function(index, track) {
-				var song = trackList[index];
-				var title = tracks[index];
-				var artist = cleanArtistString(song.artist);
-				var hasButton = jQuery(track).data("hasButton");
-				if (typeof(hasButton) === 'undefined' || !hasButton){
-					jQuery.ajax({ //query spotify's metadata api
-						url: "https://api.spotify.com/v1/search?q=" + title + "&type=track",
-						crossDomain: true, 
-						success: function (data){
-							processData(data, title, track, artist, buttonString);
-						}	    
-					});
-					jQuery(track).data("hasButton", true);
-				}
-			});//each
+			if ($('.dl').length < trackList.length) {
+				$('ul.tools').each(function(index, track) {
+					var song = trackList[index];
+					var title = tracks[index];
+					var artist = cleanArtistString(song.artist);
+					var hasButton = $(track).data("hasButton");
+					if (typeof(hasButton) === 'undefined' || !hasButton){
+						$.ajax({ //query spotify's metadata api
+							url: "https://api.spotify.com/v1/search?q=" + title + "&type=track&limit=50",
+							crossDomain: true, 
+							success: function (data){
+								processData(data, title, track, artist, buttonString);
+							}
+						});
+						$(track).data("hasButton", true);
+					}
+				});//each
 			}
 		}		
     };//buttonScript
-	
+
 	function receiveMessage(event){
 		if (event.origin != 'http://ecmode.github.io') {
 			return;
@@ -205,7 +212,19 @@ var main = function() {
 			authWindow.close();
 		}
 		accessToken = event.data;
-		getPlaylistInfo();
+		tokenTimer = 3600;//default expires_in
+		countdownTool = window.setInterval(function () {
+			tokenTimer -= 1;
+			if (tokenTimer <= 0){
+				window.clearInterval(countdownTool);
+			}
+		}, 1000);
+		var ev = $._data(window, 'events');
+		if(ev && !ev.tokenReceived) {
+			getUserInfo();
+		} else {
+			$(window).trigger('tokenReceived');
+		}
 	}
 
 	function toQueryString(obj) {
@@ -235,7 +254,7 @@ var main = function() {
 		var params = {
 			client_id: 'cacf8c9569be43b5ae5c183254abbb87',
 			redirect_uri: 'http://ecmode.github.io/response',
-			scope: 'user-read-private user-read-email',
+			scope: 'playlist-modify playlist-modify-private playlist-read-private',
 			response_type: 'token'
 		};
 		authWindow = window.open(
@@ -244,14 +263,45 @@ var main = function() {
 			'menubar=no,location=no,resizable=no,scrollbars=no,status=no, width=' + width + ', height=' + height + ', top=' + top + ', left=' + left
 		);
 	}
+	
+	//client side doesn't have access to the refresh token
+	function reauth(uri) {
+		login();
+		$(window).on('tokenReceived', function () {
+			addToPlaylist(uri);
+			$(this).unbind('tokenReceived');
+		});
+	}
 
     var playlistInfo = {};
     var accessToken = null;
     var userId = null;
     var targetPlaylist = null;
     var tokenTimer = 0;
+	var countdownTool;
+	var targetRegion = null; //available via user_info.country;  will have to work this in somehow...
 	
-	function getPlaylistInfo() {
+	function addToPlaylist(uri) {
+		if (tokenTimer <= 0){
+			reauth(uri);
+			return;
+		}
+		$.ajax({
+			url: 'https://api.spotify.com/v1/users/' + userId + '/playlists/' + playlistInfo[targetPlaylist] + '/tracks',    
+			contentType: 'application/json',
+			data: JSON.stringify([uri]),
+			type: 'POST',
+			dataType: 'json',
+			headers: {
+				'Authorization': 'Bearer ' + accessToken
+			},
+			success: function(response) {
+		
+			}
+		});
+	}
+	
+	function getUserInfo() {
 		//get user info, more importantly the user id
 		$.ajax({
 			url: 'https://api.spotify.com/v1/me',
@@ -259,43 +309,49 @@ var main = function() {
 				'Authorization': 'Bearer ' + accessToken
 			},
 			success: function(response) {
-				userId = response.id.toLowerCase();  
 				//get playlist info, more importantly the playlist id
-	            $.ajax({
-	                url: 'https://api.spotify.com/v1/users/' + userId + '/playlists',
-	                headers: {
-	                    'Authorization': 'Bearer ' + accessToken
-	                },
-	                success: function(response) {
-	                	if (Object.keys(playlistInfo).length > 0){
-	                		return; //we already have playlist ids, not worrying about querying new lists...cause yeah...
-	                	}
-						var list = $('#playlist-info');
-	                	for (var i = 0; i < response.items.length; i++){
-	                		if (response.items[i].id === null){
-	                			continue;
-	                		}
-	                		list.append('<li><a>' + response.items[i].name + '</a></li>')
-	                		playlistInfo[response.items[i].name] = response.items[i].id;
-	                	}
-	                	$('#playlist-info').delegate('li', 'click', function () {
-						    targetPlaylist = $(this).text();
-						    $('#spotify-auth-text').text('+' + targetPlaylist);
-						    if (($('.search')).length > 0){
-						    	$('.search').unbind('click');
-					    		$('.search').removeClass('search').addClass('add');
-					    		$('.add').click(function (){alert('test')})
-	                		}
+				userId = response.id.toLowerCase();
+				getPlaylistInfo();
+			}
+		});
+	}
+	debugger;
+	function getPlaylistInfo() {
+		$.ajax({
+			url: 'https://api.spotify.com/v1/users/' + userId + '/playlists',
+			headers: {
+				'Authorization': 'Bearer ' + accessToken
+			},
+			success: function(response) {
+				if (Object.keys(playlistInfo).length > 0){
+					return; //we already have playlist ids, not worrying about querying new lists...cause yeah...
+				}
+				var list = $('#playlist-info');
+				for (var i = 0; i < response.items.length; i++){
+					if (response.items[i].id === null){
+						continue;
+					}
+					list.append('<li><a>' + response.items[i].name + '</a></li>')
+					playlistInfo[response.items[i].name] = response.items[i].id;
+				}
+				list.delegate('li', 'click', function () {
+					targetPlaylist = $(this).text();
+					$('#spotify-auth-text').text('+' + targetPlaylist);
+					if (($('.search')).length > 0){
+						$('.search').removeClass('search').addClass('add');
+						$('.SpotButton').unbind('click');
+						$('.SpotButton').click(function (){
+							addToPlaylist($(this).attr('uri-data'));
 						});
-						$('#spotify-auth-text').text('Select Playlist');
-					    $('#spotify-auth').unbind('click');
-	                }
-	            });
+					}
+				});
+				$('#spotify-auth-text').text('Select Playlist');
+				$('#spotify-auth').unbind('click');
 			}
 		});
 	}
 
-    jQuery('ul.tools').on('click', '.SpotButton', function() {
+    $('ul.tools').on('click', '.SpotButton', function() {
 		spotGATracker('send', 'event', 'track-lookup-button', 'click', 'track-lookup', 1);
     });
 
@@ -306,7 +362,7 @@ var main = function() {
 		window.addEventListener('message', receiveMessage);
 	});
 	
-    jQuery(document).ajaxComplete(function(event,request, settings){
+    $(document).ajaxComplete(function(event,request, settings){
 		buttonScript();
     });
 };
