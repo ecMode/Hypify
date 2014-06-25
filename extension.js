@@ -113,33 +113,34 @@ var main = function() {
     }
 
     var processData = function (data, title, track, artist, buttonString) {
-	var jsonResult = data;
-	// Reasonable to say that if the artist isn't available on the first page he isn't there
-	var queryTracks = jsonResult.tracks.items;
-	for ( var i in queryTracks ) {
-	    var re = new RegExp(title, "gi");
-	    var name = queryTracks[i].name;
-	    var artists = queryTracks[i].artists;
-	    var album = queryTracks[i].album;
-		var availableMarkets = queryTracks[i].available_markets
-		
-	    if (checkTitle(title, name) && checkArtist(artist, artists) && isOfRegion(availableMarkets, "US")) {
-			var spot_button  = document.createElement("a");
-			spot_button.target = "_top";
-			spot_button.className = "SpotButton";
-			spot_button.innerHTML = '<table class="arrow"><tr><td><div class="spot-star"></div></td></tr><tr><td class="' + buttonString + '"></td></tr></table>';
-			if (!queryTracks[i].external_urls.hasOwnProperty('spotify'))
+		var jsonResult = data;
+		// Reasonable to say that if the artist isn't available on the first page he isn't there
+		var queryTracks = jsonResult.tracks.items;
+		for ( var i in queryTracks ) {
+		    var re = new RegExp(title, "gi");
+		    var name = queryTracks[i].name;
+		    var artists = queryTracks[i].artists;
+		    var album = queryTracks[i].album;
+			var availableMarkets = queryTracks[i].available_markets
+			
+		    if (checkTitle(title, name) && checkArtist(artist, artists) && isOfRegion(availableMarkets, "US")) {
+				var spot_button  = document.createElement("a");
+				spot_button.target = "_top";
+				spot_button.className = "SpotButton";
+				spot_button.innerHTML = '<table class="arrow"><tr><td><div class="search"></div></td></tr><tr><td class="' + buttonString + '"></td></tr></table>';
+				if (!queryTracks[i].external_urls.hasOwnProperty('spotify'))
+					break;
+				spot_button.addEventListener('click', function (){
+					alert('blasjdlkfsdf');
+					window.open(queryTracks[i].external_urls.spotify);
+				});
+				jQuery(track).prepend('<li class="dl"><table class="spacer"></table>' + jQuery(spot_button)[0].outerHTML + '</li>');
 				break;
-			spot_button.href = queryTracks[i].external_urls.spotify;
-			spot_button.target = "_blank";
-			jQuery(track).prepend('<li class="dl"><table class="spacer"></table>' + jQuery(spot_button)[0].outerHTML + '</li>');
-			break;
-	    }
-	}
+		    }
+		}
     }
     
-    var generator = function()
-    {
+    var generator = function() {
         var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
         var string_length = 8;
         var randomstring = "";
@@ -203,8 +204,10 @@ var main = function() {
 		if (authWindow) {
 			authWindow.close();
 		}
-		showInfo(event.data);
+		accessToken = event.data;
+		getPlaylistInfo();
 	}
+
 	function toQueryString(obj) {
 		var parts = [];
 		for (var i in obj) {
@@ -217,7 +220,7 @@ var main = function() {
 	var authWindow = null;
 
 	function injectSpotifyLogin () {
-		$('.menu').append('<li><a id="spotify-auth">Spotify Login</a></li>');
+		$('.menu').append('<li id="spotify-auth"><a id="spotify-auth-text" title="Interact with Spotify">Spotify Login</a><ul id="playlist-info"></ul></li>');
 		$('#spotify-auth').click(function() {
 			login();
 		});
@@ -241,23 +244,53 @@ var main = function() {
 			'menubar=no,location=no,resizable=no,scrollbars=no,status=no, width=' + width + ', height=' + height + ', top=' + top + ', left=' + left
 		);
 	}
+
+    var playlistInfo = {};
+    var accessToken = null;
+    var userId = null;
+    var targetPlaylist = null;
+    var tokenTimer = 0;
 	
-	function showInfo(accessToken) {
-		// fetch information about me
+	function getPlaylistInfo() {
+		//get user info, more importantly the user id
 		$.ajax({
 			url: 'https://api.spotify.com/v1/me',
 			headers: {
 				'Authorization': 'Bearer ' + accessToken
 			},
 			success: function(response) {
-				var source = document.getElementById('loggedin-template').innerHTML;
-				var template = Handlebars.compile(source);
-				var data = response;
-				
-				document.getElementById('loggedin').innerHTML = template(data);
-				
-				$('div#login').hide();
-				$('div#loggedin').show();
+				userId = response.id.toLowerCase();  
+				//get playlist info, more importantly the playlist id
+	            $.ajax({
+	                url: 'https://api.spotify.com/v1/users/' + userId + '/playlists',
+	                headers: {
+	                    'Authorization': 'Bearer ' + accessToken
+	                },
+	                success: function(response) {
+	                	if (Object.keys(playlistInfo).length > 0){
+	                		return; //we already have playlist ids, not worrying about querying new lists...cause yeah...
+	                	}
+						var list = $('#playlist-info');
+	                	for (var i = 0; i < response.items.length; i++){
+	                		if (response.items[i].id === null){
+	                			continue;
+	                		}
+	                		list.append('<li><a>' + response.items[i].name + '</a></li>')
+	                		playlistInfo[response.items[i].name] = response.items[i].id;
+	                	}
+	                	$('#playlist-info').delegate('li', 'click', function () {
+						    targetPlaylist = $(this).text();
+						    $('#spotify-auth-text').text('+' + targetPlaylist);
+						    if (($('.search')).length > 0){
+						    	$('.search').unbind('click');
+					    		$('.search').removeClass('search').addClass('add');
+					    		$('.add').click(function (){alert('test')})
+	                		}
+						});
+						$('#spotify-auth-text').text('Select Playlist');
+					    $('#spotify-auth').unbind('click');
+	                }
+	            });
 			}
 		});
 	}
@@ -265,20 +298,17 @@ var main = function() {
     jQuery('ul.tools').on('click', '.SpotButton', function() {
 		spotGATracker('send', 'event', 'track-lookup-button', 'click', 'track-lookup', 1);
     });
- 
-		debugger;
-    // Run it right away
-    buttonScript();
-	injectSpotifyLogin();
+
 	$(function(){
+	    // Run it right away
+	    buttonScript();
+		injectSpotifyLogin();
 		window.addEventListener('message', receiveMessage);
 	});
 	
     jQuery(document).ajaxComplete(function(event,request, settings){
 		buttonScript();
     });
-	
-	
 };
 
 // Lets create the script objects
