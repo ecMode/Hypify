@@ -315,7 +315,7 @@ var main = function() {
 			}
 		});
 	}
-	debugger;
+
 	function getPlaylistInfo() {
 		$.ajax({
 			url: 'https://api.spotify.com/v1/users/' + userId + '/playlists',
