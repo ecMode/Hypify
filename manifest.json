@@ -1,7 +1,7 @@
  {
   "manifest_version": 2,
   "name": "Hypify",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "Adds a magnifying glass button to HypeMachine to check if the song exists in Spotify's library.",
   "web_accessible_resources": ["hypestyles.css"],
   "background": {
