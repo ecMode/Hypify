@@ -83,6 +83,7 @@ var main = function() {
 		else
 			return artist.trim();
     }
+
     //In the scenario where a returned title has punctuation or parens
     //a straight up string match wont work since I strip all extras for the query
     //I'm going to split my title query into single words and do individual word matches.
@@ -132,7 +133,7 @@ var main = function() {
 				spot_button.setAttribute('uri-data', uri);
 				if (!queryTracks[i].external_urls.hasOwnProperty('spotify'))
 					break;
-				$(track).prepend('<li class="dl"><table class="spacer"></table>' + $(spot_button)[0].outerHTML + '</li>');
+				$(track).prepend('<li class="hypify"><table class="spacer"></table>' + $(spot_button)[0].outerHTML + '</li>');
 				if (action == 'search'){
 					$('.SpotButton[uri-data="' + uri + '"]').click(function () {
 						window.open(queryTracks[i].external_urls.spotify);
@@ -167,7 +168,7 @@ var main = function() {
     var styles = '.' + buttonString;
     styles += '.arrow:hover .'+ buttonString +'{ border-top: 10px solid #0063DC; }';
     
-    //done this way for IE aparantly.
+    //done this way for IE apparently.
     if (css.styleSheet) 
         css.styleSheet.cssText = styles;
     else 
@@ -183,7 +184,7 @@ var main = function() {
 			// Check if this particular page has been processed
 			// through a previous call
 			var tracks = getSearchQueries();
-			if ($('.dl').length < trackList.length) {
+			if ($('.hypify').length < trackList.length) {
 				$('ul.tools').each(function(index, track) {
 					var song = trackList[index];
 					var title = tracks[index];
