@@ -194,6 +194,9 @@ var main = function() {
 						$.ajax({ //query spotify's metadata api
 							url: "https://api.spotify.com/v1/search?q=" + title + "&type=track&limit=50",
 							crossDomain: true, 
+							headers: {
+								'Authorization': 'Bearer ' + accessToken
+							},
 							success: function (data){
 								processData(data, title, track, artist, buttonString);
 							}
@@ -312,6 +315,7 @@ var main = function() {
 			success: function(response) {
 				//get playlist info, more importantly the playlist id
 				userId = response.id.toLowerCase();
+	    		buttonScript();
 				getPlaylistInfo();
 			}
 		});
@@ -358,11 +362,10 @@ var main = function() {
 
 	$(function(){
 	    // Run it right away
-	    buttonScript();
 		injectSpotifyLogin();
 		window.addEventListener('message', receiveMessage);
 	});
-	
+
     $(document).ajaxComplete(function(event,request, settings){
 		buttonScript();
     });
